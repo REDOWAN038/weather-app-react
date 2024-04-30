@@ -1,6 +1,6 @@
 import { Suspense, useState, useEffect } from "react"
 import axios from "axios"
-import { format, parseISO } from "date-fns"
+import { format, fromUnixTime, parseISO } from "date-fns"
 // import Container from "./Container"
 import Loading from "./Loading"
 import convertKelvinToCelsius from "../utils/convertKelvinToCelsius"
@@ -9,6 +9,7 @@ import WeatherIcon from "./WeatherIcon"
 import WeatherDetails from "./WeatherDetails"
 import metersToKiloMeters from "../utils/metersToKilometers"
 import convertWindSpeed from "../utils/convertWindSpeed"
+import ForecastWeatherDetails from "./ForecastWeatherDetails"
 
 const getWeatherInfo = async () => {
   try {
@@ -51,6 +52,22 @@ const ViewComponent = () => {
   }
 
   const firstData = weatherData?.list[0]
+
+  const uniqueDates = [
+    ...new Set(
+      weatherData?.list.map(
+        (entry) => new Date(entry.dt * 1000).toISOString().split("T")[0]
+      )
+    ),
+  ]
+
+  const firstDataForEachDate = uniqueDates.map((date) => {
+    return weatherData?.list.find((entry) => {
+      const entryDate = new Date(entry.dt * 1000).toISOString().split("T")[0]
+      const entryTime = new Date(entry.dt * 1000).getHours()
+      return entryDate === date && entryTime >= 6
+    })
+  })
 
   return (
     <main className='px-3 max-w-7xl mx-auto flex flex-col gap-9 w-full pb-10 pt-4'>
@@ -127,13 +144,44 @@ const ViewComponent = () => {
                 airPressure={`${firstData?.main.pressure} hPa`}
                 humidity={`${firstData?.main.humidity}%`}
                 sunrise={format(
-                  weatherData?.city.sunrise ?? 1702949452,
+                  fromUnixTime(weatherData?.city.sunrise),
                   "H:mm"
                 )}
-                sunset={format(weatherData?.city.sunset ?? 1702517657, "H:mm")}
-                windSpeed={convertWindSpeed(firstData?.wind.speed ?? 1.64)}
+                sunset={format(fromUnixTime(weatherData?.city.sunset), "H:mm")}
+                windSpeed={convertWindSpeed(firstData?.wind.speed)}
               />
             </div>
+          </div>
+          {/* forecast */}
+          <div className='flex flex-col gap-4 w-full'>
+            <p className='text-2xl mt-10'>Forecast (6 days)</p>
+            {firstDataForEachDate.map((data, idx) => {
+              return (
+                <ForecastWeatherDetails
+                  key={idx}
+                  description={data?.weather[0].description}
+                  weatherIcon={data?.weather[0].icon}
+                  date={format(parseISO(data.dt_txt), "dd.MM")}
+                  day={format(parseISO(data?.dt_txt), "EEEE")}
+                  feels_like={data?.main.feels_like}
+                  temp={data?.main.temp}
+                  temp_max={data?.main.temp_max}
+                  temp_min={data?.main.temp_min}
+                  airPressure={`${data?.main.pressure} hPa `}
+                  humidity={`${data?.main.humidity}% `}
+                  sunrise={format(
+                    fromUnixTime(weatherData?.city.sunrise),
+                    "H:mm"
+                  )}
+                  sunset={format(
+                    fromUnixTime(weatherData?.city.sunset),
+                    "H:mm"
+                  )}
+                  visibility={`${metersToKiloMeters(data?.visibility)} `}
+                  windSpeed={`${convertWindSpeed(data?.wind.speed)} `}
+                />
+              )
+            })}
           </div>
         </div>
       </section>
