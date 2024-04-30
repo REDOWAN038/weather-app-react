@@ -2,7 +2,7 @@ import { IoSearch } from "react-icons/io5"
 
 const SearchBox = () => {
   return (
-    <form className='flex items-center justify-center h-10'>
+    <form className='flex relative items-center justify-center h-10'>
       <input
         type='text'
         placeholder='Search location..'

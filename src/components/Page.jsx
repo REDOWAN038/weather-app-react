@@ -18,7 +18,6 @@ const getWeatherInfo = async () => {
         import.meta.env.VITE_WEATHER_KEY
       }&cnt=56`
     )
-    console.log("data ", data)
     return data
   } catch (error) {
     console.error(error)
