@@ -1,7 +1,7 @@
 // eslint-disable-next-line react/prop-types
 export default function WeatherIcon({ iconName }) {
   return (
-    <image
+    <img
       width={100}
       height={100}
       alt='weather-icon'
