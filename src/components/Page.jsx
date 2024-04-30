@@ -10,11 +10,12 @@ import WeatherDetails from "./WeatherDetails"
 import metersToKiloMeters from "../utils/metersToKilometers"
 import convertWindSpeed from "../utils/convertWindSpeed"
 import ForecastWeatherDetails from "./ForecastWeatherDetails"
+import { useSelector } from "react-redux"
 
-const getWeatherInfo = async () => {
+const getWeatherInfo = async (place = "Sylhet") => {
   try {
     const { data } = await axios.get(
-      `https://api.openweathermap.org/data/2.5/forecast?q=sylhet&appid=${
+      `https://api.openweathermap.org/data/2.5/forecast?q=${place}&appid=${
         import.meta.env.VITE_WEATHER_KEY
       }&cnt=56`
     )
@@ -26,21 +27,25 @@ const getWeatherInfo = async () => {
 }
 
 const ViewComponent = () => {
+  const place = useSelector((state) => state.data.place)
+  const loading = useSelector((state) => state.data.loading)
   const [weatherData, setWeatherData] = useState(null)
   const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getWeatherInfo()
+        const data = await getWeatherInfo(place)
         setWeatherData(data)
       } catch (error) {
         setError(error)
       }
     }
 
-    fetchData()
-  }, [])
+    if (place) {
+      fetchData()
+    }
+  }, [place])
 
   if (error) {
     return <div>Error fetching data: {error.message}</div>
@@ -68,7 +73,9 @@ const ViewComponent = () => {
     })
   })
 
-  return (
+  return loading ? (
+    <Loading />
+  ) : (
     <main className='px-3 max-w-7xl mx-auto flex flex-col gap-9 w-full pb-10 pt-4'>
       <section className='space-y-4'>
         <div className='space-y-2'>
